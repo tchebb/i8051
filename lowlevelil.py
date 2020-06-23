@@ -182,7 +182,8 @@ def low_level_il(size, name, ops):
         else: # Rx, A, or @Rn
             delta = 1 if name == 'inc' else -1
             def inc_dec(il,vs,ea):
-                w(ops[0], il, il.add(1, r(ops[0], il), il.const(1, delta)))
+                v = vs[0] if ops[0] == 'data addr' else 0
+                w(ops[0], il, il.add(1, r(ops[0], il, v), il.const(1, delta)), v)
             return inc_dec 
     if name == 'mov':
         if ops == ['DPTR', '#data']:
