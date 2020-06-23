@@ -213,13 +213,13 @@ def low_level_il(size, name, ops):
         sz = 1 if ops == ['A'] else 0
         def _tmp():
             def clr(il,vs,ea):
-                w(ops[0], il, il.const(sz, 0), 0 if is_reg else vs[0])
+                w(ops[0], il, il.const(sz,0) if is_reg else 'bit_clear', 0 if is_reg else vs[0])
             def setb(il,vs,ea):
-                w(ops[0], il, il.const(sz,1), 0 if is_reg else vs[0])
+                w(ops[0], il, il.const(sz,1) if is_reg else 'bit_set', 0 if is_reg else vs[0])
             def cpl(il,vs,ea):
                 v = 0 if is_reg else vs[0]
                 val = il.neg_expr(sz, r(ops[0], il, v)) 
-                w(ops[0], il, val, v)
+                w(ops[0], il, val if is_reg else 'bit_flip', v)
             return locals()
         return _tmp()[name]
     if name in ['rlc', 'rl', 'rrc', 'rr']:  # rlc A
@@ -361,8 +361,15 @@ def w(kind, il, val, v=0):
             # TODO sketchy bit-write endianness
             addr = il.const_pointer(6, byte)  # should be properly mapped by ana
             mask = il.shift_left(1, il.const(1, 1), il.const(1, bit))
-            val = il.or_expr(1, il.load(1, addr), mask)  # <- also only sets, never clears :|
-            return il.append(il.store(1, addr, val))
+            if val == 'bit_set':
+                sym_val = il.or_expr(1, il.load(1, addr), mask)
+            elif val == 'bit_clear':
+                sym_val = il.and_expr(1, il.load(1, addr), il.not_expr(1, mask))
+            elif val == 'bit_flip':
+                sym_val = il.xor_expr(1, il.load(1, addr), mask)
+            else:
+                assert not "valid action"
+            return il.append(il.store(1, addr, sym_val))
     if kind.startswith('R') or kind in ['A', 'B']:
         return il.append(il.set_reg(1, kind, val))
     if kind == 'DPTR':
