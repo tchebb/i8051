@@ -316,9 +316,9 @@ def r(kind, il, v=0):
                     return il.flag('s') # TODO TODO TODO how will setting this be tracked??
                 # Strangely, based on LLIL pretty-printing, test_bit takes a
                 # *mask* not a bit index.
-                return il.test_bit(1, il.reg(1, mem.regs[byte]), il.const(0, 1 << bit))
+                return il.test_bit(1, il.reg(1, mem.regs[byte]), il.const(1, 1 << bit))
             addr = il.const_pointer(6, byte)
-            return il.test_bit(1, il.load(1, addr), il.const(0, 1 << bit))
+            return il.test_bit(1, il.load(1, addr), il.const(1, 1 << bit))
     if kind == 'DPTR':
         return il.reg(2, kind)
     if kind.startswith('R') or kind in ['A', 'B'] or kind in mem.regs:
